@@ -1,8 +1,9 @@
 import strawberry
 from typing import List, Optional, Union
+from enum import Enum
 import uuid
-from .config import conf_catalog, conf_parameters, PIPELINES
-
+from .config import CONF_CATALOG, CONF_PARAMETERS, PIPELINES
+print("CONF_CATALOG", CONF_CATALOG)
 @strawberry.type
 class Tag:
     key: str
@@ -223,11 +224,11 @@ class PipelineTemplate:
         for n in PIPELINES[self.name].inputs():
             if n.startswith("params:"):
                 name = n.split("params:")[1]
-                value = conf_parameters[name]
+                value = CONF_PARAMETERS[name]
                 if not params.get(name, False):
                     params[name] = value
             elif n == "parameters":
-                for k,v in conf_parameters.items():
+                for k,v in CONF_PARAMETERS.items():
                     if not params.get(k, False):
                         params[k] = v
         return [Parameter(name = k, value = v) for k,v in params.items()]
@@ -237,7 +238,7 @@ class PipelineTemplate:
         inputs_resolved = []
         for n in PIPELINES[self.name].inputs():
             if not n.startswith("params:") and n != "parameters":
-                config = conf_catalog[n]
+                config = CONF_CATALOG[n]
                 inputs_resolved.append(DataSet(name = n, filepath = config["filepath"], type = config["type"], save_args = config.get("save_args", None), load_args = config.get("load_args", None)))
             
         return inputs_resolved
@@ -246,7 +247,7 @@ class PipelineTemplate:
     def outputs(self) -> List[DataSet]:
         outputs_resolved = []
         for n in PIPELINES[self.name].outputs():    
-            config = conf_catalog[n]
+            config = CONF_CATALOG[n]
             outputs_resolved.append(DataSet(name = n, filepath = config["filepath"], type = config["type"], save_args = config.get("save_args", None), load_args = config.get("load_args", None)))
  
         return outputs_resolved

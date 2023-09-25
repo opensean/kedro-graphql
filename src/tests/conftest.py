@@ -7,6 +7,7 @@ from kedro.framework.hooks import _create_hook_manager
 from kedro_graphql.backends import init_backend
 from kedro_graphql.tasks import run_pipeline
 from kedro_graphql.models import Pipeline, DataSet, Parameter, Tag
+from kedro_graphql.config import init_kedro_session
 from unittest.mock import patch
 from uuid import uuid4
 from io import BytesIO
@@ -26,6 +27,16 @@ def project_context(config_loader):
         config_loader=config_loader,
         hook_manager=_create_hook_manager(),
     )
+
+@pytest.fixture(scope='session')
+def kedro_session():
+    return init_kedro_session()
+    ##return KedroContext(
+    ##    package_name="kedro_graphql",
+    ##    project_path=Path.cwd(),
+    ##    config_loader=config_loader,
+    ##    hook_manager=_create_hook_manager(),
+    ##)
 
 @pytest.fixture(scope='session')
 def celery_config():

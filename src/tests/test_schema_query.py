@@ -12,7 +12,7 @@ schema = build_schema()
 class TestSchemaQuery:
 
     @pytest.mark.asyncio
-    async def test_pipeline(self, mock_info_context, mock_pipeline):
+    async def test_pipeline(self, mock_info_context, mock_pipeline, kedro_session):
 
         query = """
         query TestQuery($id: String!) {
@@ -25,7 +25,7 @@ class TestSchemaQuery:
         assert resp.errors is None
 
     @pytest.mark.asyncio
-    async def test_pipeline_templates(self):
+    async def test_pipeline_templates(self, kedro_session):
 
         query = """
         query TestQuery {

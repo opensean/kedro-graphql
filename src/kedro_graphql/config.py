@@ -5,15 +5,18 @@ from pathlib import Path
 from dotenv import dotenv_values
 import os
 from importlib import import_module
+import logging
+logger = logging.getLogger("kedro-graphql")
 
 ## pyproject.toml located in parent directory, required for project config
-project_path = Path.cwd()
-metadata = bootstrap_project(project_path)
-session = KedroSession.create(metadata.package_name, project_path=project_path)
-context = session.load_context()
-
-conf_catalog = context.config_loader["catalog"]
-conf_parameters = context.config_loader["parameters"]
+##project_path = Path.cwd()
+##metadata = bootstrap_project(project_path)
+#### pass env and conf source here
+##session = KedroSession.create(metadata.package_name, project_path=project_path)
+##context = session.load_context()
+##
+##conf_catalog = context.config_loader["catalog"]
+##conf_parameters = context.config_loader["parameters"]
 
 ## define defaults
 config = {
@@ -25,6 +28,8 @@ config = {
     "KEDRO_GRAPHQL_BROKER": "redis://localhost",
     "KEDRO_GRAPHQL_CELERY_RESULT_BACKEND": "redis://localhost",
     "KEDRO_GRAPHQL_RUNNER": "kedro.runner.SequentialRunner",
+    "KEDRO_GRAPHQL_ENV": "local",
+    "KEDRO_GRAPHQL_CONF_SOURCE": None,
     #"KEDRO_GRAPHQL_RUNNER": "kedro_graphql.runner.argo.ArgoWorkflowsRunner",
     }
 
@@ -42,11 +47,29 @@ TYPE_PLUGINS = {"query":[],
                 "mutation":[],
                 "subscription":[]}
 
+CONF_CATALOG = {}
+CONF_PARAMETERS = {}
+
 def discover_plugins():
     ## discover plugins e.g. decorated functions e.g @gql_query, etc...
     imports = [i.strip() for i in config["KEDRO_GRAPHQL_IMPORTS"].split(",") if len(i.strip()) > 0]
     for i in imports:
         import_module(i)   
+
+
+def init_kedro_session(env = None, conf_source = None):
+    ## pyproject.toml located in parent directory, required for project config
+    project_path = Path.cwd()
+    metadata = bootstrap_project(project_path)
+    ## pass env and conf source here
+    session = KedroSession.create(metadata.package_name, 
+                                  project_path=project_path,
+                                  env = config["KEDRO_GRAPHQL_ENV"],
+                                  conf_source = config["KEDRO_GRAPHQL_CONF_SOURCE"])
+    context = session.load_context()
+    logger.info("initialized kedro session")
+    CONF_CATALOG = context.config_loader["catalog"]
+    CONF_PARAMETERS = context.config_loader["parameters"]
 
 ##module, class_name = config["KEDRO_GRAPHQL_RUNNER"].rsplit(".", 1)
 ##module = import_module(module)
