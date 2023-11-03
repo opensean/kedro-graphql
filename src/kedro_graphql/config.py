@@ -1,12 +1,10 @@
-from kedro.framework.startup import bootstrap_project
-from kedro.framework.session import KedroSession
+#from kedro.framework.startup import bootstrap_project
+#from kedro.framework.session import KedroSession
 from kedro.framework.project import pipelines as PIPELINES
 from pathlib import Path
 from dotenv import dotenv_values
 import os
 from importlib import import_module
-import logging
-logger = logging.getLogger("kedro-graphql")
 
 ## pyproject.toml located in parent directory, required for project config
 ##project_path = Path.cwd()
@@ -57,19 +55,19 @@ def discover_plugins():
         import_module(i)   
 
 
-def init_kedro_session(env = None, conf_source = None):
-    ## pyproject.toml located in parent directory, required for project config
-    project_path = Path.cwd()
-    metadata = bootstrap_project(project_path)
-    ## pass env and conf source here
-    session = KedroSession.create(metadata.package_name, 
-                                  project_path=project_path,
-                                  env = config["KEDRO_GRAPHQL_ENV"],
-                                  conf_source = config["KEDRO_GRAPHQL_CONF_SOURCE"])
-    context = session.load_context()
-    logger.info("initialized kedro session")
-    CONF_CATALOG = context.config_loader["catalog"]
-    CONF_PARAMETERS = context.config_loader["parameters"]
+##def init_kedro_session(metadata = None, env = None, conf_source = None):
+##    ## pyproject.toml located in parent directory, required for project config
+##    #project_path = Path.cwd()
+##    #metadata = bootstrap_project(project_path)
+##    ## pass env and conf source here
+##    session = KedroSession.create(metadata.package_name, 
+##                                  project_path=metadata.project_path,
+##                                  env = env or config["KEDRO_GRAPHQL_ENV"],
+##                                  conf_source = conf_source or config["KEDRO_GRAPHQL_CONF_SOURCE"])
+##    context = session.load_context()
+##    logger.info("initialized kedro session")
+##    CONF_CATALOG = context.config_loader["catalog"]
+##    CONF_PARAMETERS = context.config_loader["parameters"]
 
 ##module, class_name = config["KEDRO_GRAPHQL_RUNNER"].rsplit(".", 1)
 ##module = import_module(module)
