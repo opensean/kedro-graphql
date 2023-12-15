@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from strawberry.fastapi import GraphQLRouter
 import os
 #from .backends import init_backend
@@ -37,11 +38,25 @@ class KedroGraphQL(FastAPI):
         self.type_plugins = TYPE_PLUGINS
 
         discover_plugins(self.config)
+
+
+        origins = config["KEDRO_GRAPHQL_ALLOWED_ORIGINS"]
+        self.add_middleware(
+            CORSMiddleware,
+            allow_origins=origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+        for origin in config["KEDRO_GRAPHQL_ALLOWED_ORIGINS"]:
+            print("added: " + origin)
+        print("added CORSMiddleware")
+
         self.schema = build_schema(self.type_plugins)
         self.backend = init_backend(self.config)
         self.graphql_app = GraphQLRouter(self.schema)
-        self.include_router(self.graphql_app, prefix = "/graphql")
-        self.add_websocket_route("/graphql", self.graphql_app)
+        self.include_router(self.graphql_app, prefix=config["KEDRO_GRAPHQL_BASE_PREFIX"])
+        self.add_websocket_route(config["KEDRO_GRAPHQL_BASE_PREFIX"], self.graphql_app)
         self.celery_app = celery_app(self.config, self.backend)
 
         @self.on_event("startup")

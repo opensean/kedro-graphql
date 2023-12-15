@@ -335,6 +335,7 @@ class PageMeta:
     next_cursor: Optional[str] = strawberry.field(
         description="The next cursor to continue with."
     )
+    count: Optional[int] = strawberry.field(description = "Total number of items.")
 
 @strawberry.type
 class PipelineTemplates:

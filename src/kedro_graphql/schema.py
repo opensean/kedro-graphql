@@ -3,7 +3,7 @@ from .events import PipelineEventMonitor
 import strawberry
 from strawberry.tools import merge_types
 from strawberry.types import Info
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator, Optional, List
 from .tasks import run_pipeline
 from .models import Pipeline, Pipelines, PipelineInput, PipelineEvent, PipelineLogMessage, PipelineTemplate, PipelineTemplates, PageMeta
 from .logs.logger import logger, PipelineLogStream
@@ -70,7 +70,7 @@ class Query:
             next_cursor = None
 
         return PipelineTemplates(
-            pipeline_templates=sliced_pipes, page_meta=PageMeta(next_cursor=next_cursor)
+            pipeline_templates=sliced_pipes, page_meta=PageMeta(next_cursor=next_cursor, count=len(info.context["request"].app.kedro_pipelines_index))
         )
 
     @strawberry.field(description = "Get a pipeline instance.")
@@ -80,14 +80,14 @@ class Query:
         return p
 
     @strawberry.field(description = "Get a list of pipeline instances.")
-    def pipelines(self, info: Info, limit: int, cursor: Optional[str] = None, filter: Optional[str] = "") -> Pipelines:
+    def pipelines(self, info: Info, limit: int, cursor: Optional[str] = None, filter: Optional[List[str]] = None) -> Pipelines:
         if cursor is not None:
             # decode the user ID from the given cursor.
             pipe_id = decode_cursor(cursor=cursor)
         else:
             pipe_id = "000000000000000000000000" ## unix epoch Jan 1, 1970 as objectId
 
-        results = info.context["request"].app.backend.list(cursor = pipe_id, limit = limit + 1, filter = filter)
+        results, count = info.context["request"].app.backend.list(cursor = pipe_id, limit = limit + 1, filter = filter)
 
         if len(results) > limit:
             # calculate the client's next cursor.
@@ -99,7 +99,7 @@ class Query:
             next_cursor = None
 
         return Pipelines(
-            pipelines=results, page_meta=PageMeta(next_cursor=next_cursor)
+            pipelines=results, page_meta=PageMeta(next_cursor=next_cursor, count = count)
         )
 
 @strawberry.type

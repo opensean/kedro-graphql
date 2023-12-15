@@ -14,6 +14,7 @@ class MongoBackend(BaseBackend):
         self.client = MongoClient(uri)
         #self.db = self.client[app.config["MONGO_DB_NAME"]]
         self.db = self.client[db]
+        self.col = self.db["pipelines"]
         #self.app = app
 
 
@@ -25,27 +26,31 @@ class MongoBackend(BaseBackend):
         """Shutdown hook."""
         self.client.close()
 
-    def list(self, cursor: uuid.UUID = None, limit = 10, filter = ""):
+    def list(self, cursor: uuid.UUID = None, limit = 10, filter = None):
         query = {'_id': { '$gte': ObjectId(cursor)}}
-        if len(filter) > 0:
-            filter = json.loads(filter)
-            query.update(filter)
-        
-        raw = self.db["pipelines"].find(query).limit(limit)
+        if filter:
+            query["$and"] = []
+            for f in filter:
+                query["$and"].append(json.loads(f))
+
+            ##print("query", query)
+
+        doc_count = self.col.count_documents(query) 
+        raw = self.col.find(query).limit(limit)
         results = []
         for r in raw:
             id = r.pop("_id")
             p = Pipeline.from_dict(r)
             p.id = str(id)
             results.append(p)
-        return results
+        return results, doc_count
 
     def load(self, id: uuid.UUID = None, task_id: str = None):
         """Load a pipeline by id or task_id"""
         if task_id:
-            r = self.db["pipelines"].find_one({"task_id": task_id})
+            r = self.col.find_one({"task_id": task_id})
         else:
-            r = self.db["pipelines"].find_one({"_id": ObjectId(id)})
+            r = self.col.find_one({"_id": ObjectId(id)})
 
         if r:
             id = r.pop("_id")
@@ -58,8 +63,8 @@ class MongoBackend(BaseBackend):
     def create(self, pipeline: Pipeline):
         """Save a pipeline"""
         j = jsonable_encoder(pipeline)
-        created = self.db["pipelines"].insert_one(j)
-        created = self.db["pipelines"].find_one({"_id": created.inserted_id})
+        created = self.col.insert_one(j)
+        created = self.col.find_one({"_id": created.inserted_id})
         pipeline.id = created["_id"]
         return pipeline
 

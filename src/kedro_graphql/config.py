@@ -8,6 +8,8 @@ config = {
             "MONGO_DB_NAME": "pipelines",
             "KEDRO_GRAPHQL_IMPORTS": "kedro_graphql.plugins.plugins,",
             "KEDRO_GRAPHQL_APP": "kedro_graphql.asgi.KedroGraphQL",
+            "KEDRO_GRAPHQL_ALLOWED_ORIGINS": "*",
+            "KEDRO_GRAPHQL_BASE_PREFIX": "/graphql",
             "KEDRO_GRAPHQL_BACKEND": "kedro_graphql.backends.mongodb.MongoBackend",
             "KEDRO_GRAPHQL_BROKER": "redis://localhost",
             "KEDRO_GRAPHQL_CELERY_RESULT_BACKEND": "redis://localhost",
